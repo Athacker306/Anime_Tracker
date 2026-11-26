@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Anime Tracker</title>
+<style>
+:root{--bg:#05081a;--card:#0d1330;--ink:#e8ecff;--mute:#8b97c9;--line:#1d2750;--acc:#5b8cff;--acc-ink:#050a1f;--w:#5b8cff;--p:#9cb4ff;--c:#58cf9a;--h:#f0b65a;--d:#f07a8f;color-scheme:dark}
+
+
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 "Avenir Next","Trebuchet MS",Verdana,sans-serif;padding:20px 16px 60px}
+main{max-width:860px;margin:0 auto}
+h1{font-size:2rem;margin:0 0 4px;letter-spacing:-.02em}
+.sub{color:var(--mute);margin:0 0 6px}
+.clock{color:var(--mute);font-size:.9rem;margin:0 0 18px;font-variant-numeric:tabular-nums}
+.clock b{color:var(--ink)}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;min-width:96px}
+.stat b{display:block;font-size:1.4rem;line-height:1.1}
+.stat span{color:var(--mute);font-size:.85rem}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.bar input,.bar select{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.bar input{flex:1;min-width:160px}
+.btn{background:var(--acc);color:var(--acc-ink);border:0;border-radius:8px;padding:9px 16px;font-weight:600}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.tab{background:transparent;border:1px solid var(--line);border-radius:99px;padding:5px 13px;color:var(--mute)}
+.tab[aria-pressed=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+li.item{background:var(--card);border:1px solid var(--line);border-left:6px solid var(--s);border-radius:10px;padding:12px 14px;display:grid;grid-template-columns:auto 1fr auto;gap:6px 12px;align-items:center}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.chip{font-size:.75rem;border:1px solid var(--line);border-radius:99px;padding:1px 9px;color:var(--mute)}
+.desc{margin:6px 0 0;color:var(--mute);font-size:.88rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.t[data-id]{cursor:pointer}
+#zoom p.zm{color:#b9c0dc;font-weight:600;font-size:.85rem}
+#zoom p.zd{color:#e6e9f5;font-weight:400;text-align:left;font-size:.95rem;max-height:32vh;overflow:auto;max-width:min(94vw,460px)}
+#zoom{position:fixed;inset:0;background:rgba(10,14,30,.88);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;z-index:50;padding:20px;cursor:zoom-out}
+#zoom.on{display:flex}
+#zoom img{max-width:min(94vw,460px);max-height:82vh;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.55)}
+#zoom p{color:#fff;margin:0;font-weight:700;text-align:center;max-width:92vw}
+.pic{cursor:pointer;width:84px;height:120px;border-radius:7px;background-size:cover;background-position:center;color:#fff;font-weight:800;font-size:1.25rem;letter-spacing:.02em;display:flex;align-items:center;justify-content:center}
+.t{font-weight:700;font-size:1.05rem;overflow-wrap:anywhere}
+.meta{color:var(--mute);font-size:.88rem}
+.badge{color:var(--s);font-weight:600}
+.prog{grid-column:1/-1;height:6px;background:var(--line);border-radius:9px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--s)}
+.act{display:flex;gap:6px;align-items:center}
+.act button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:5px 10px}
+.act .plus{background:var(--s);color:#fff;border-color:var(--s);font-weight:700}
+.note{grid-column:1/-1;color:var(--mute);font-size:.9rem;margin:0}
+.rec{margin-top:26px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.rec summary{font-weight:700;font-size:1.1rem;cursor:pointer}
+.rec ul{margin-top:10px;gap:6px}
+.rec li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.rec li button{border:1px solid var(--line);background:transparent;border-radius:8px;padding:5px 12px;white-space:nowrap}
+.rec li button:disabled{opacity:.55;cursor:default}
+.empty{text-align:center;color:var(--mute);padding:36px 12px;border:2px dashed var(--line);border-radius:12px}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);width:min(440px,94vw);padding:20px}
+dialog::backdrop{background:rgba(10,14,30,.5)}
+label{display:block;font-weight:600;font-size:.9rem;margin:10px 0 4px}
+dialog input,dialog select,dialog textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.row{display:flex;gap:10px}.row>div{flex:1}
+.foot{display:flex;gap:8px;justify-content:space-between;margin-top:16px}
+.foot div{display:flex;gap:8px}
+.tools{margin-top:26px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;color:var(--mute);font-size:.88rem}
+#warn{display:none;background:var(--h);color:#1b1300;padding:8px 12px;border-radius:8px;margin-bottom:12px;font-size:.9rem}
+
+/* Streaming-app poster grid */
+#list{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px}
+#list li.empty{grid-column:1/-1}
+li.item{display:flex;flex-direction:column;padding:0;overflow:hidden;border:0;border-left:0;border-radius:14px;background:var(--card);box-shadow:0 8px 22px rgba(0,0,0,.35);transition:transform .15s ease,box-shadow .15s ease}
+li.item:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.45)}
+li.item .pic{width:100%!important;height:auto!important;aspect-ratio:2/3;border-radius:0}
+li.item>div:not(.act):not(.prog):not(.pic){padding:10px 12px 0}
+li.item .t{font-size:.95rem;line-height:1.25}
+li.item .meta{font-size:.78rem;margin-top:4px}
+li.item .chips,li.item .desc,li.item .note{display:none}
+li.item .prog{height:4px;border-radius:0;margin-top:auto}
+li.item .act{padding:8px 12px 12px;justify-content:space-between;flex-wrap:wrap}
+li.item .act button{font-size:.8rem;padding:4px 9px}
+li.item{border-left:0}
+li.item .badge{color:var(--s)}
+#wall{position:fixed;inset:0;z-index:-1;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;padding:6px;overflow:hidden;filter:blur(14px) saturate(1.1);opacity:.28;pointer-events:none}
+#wall img{width:100%;aspect-ratio:2/3;object-fit:cover;border-radius:6px}
+/* Spotlight glow background */
+#wall{display:none!important}
+body{background:radial-gradient(ellipse 70% 45% at 50% -5%,rgba(255,111,174,.38),rgba(255,111,174,.08) 45%,transparent 75%),radial-gradient(ellipse 60% 40% at 50% 100%,rgba(255,111,174,.12),transparent 70%),var(--bg)!important;background-attachment:fixed!important;min-height:100vh}
+/* Abstract shapes background */
+#blobs{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;filter:blur(48px);opacity:.42}
+#blobs i{position:absolute;border-radius:50%;width:42vmax;height:42vmax;background:var(--acc);animation:drift 22s ease-in-out infinite alternate}
+#blobs i:nth-child(1){left:-12vmax;top:-10vmax}
+#blobs i:nth-child(2){right:-14vmax;top:30vh;background:var(--p);animation-duration:28s}
+#blobs i:nth-child(3){left:20vw;bottom:-18vmax;background:#7fd6b0;animation-duration:34s}
+@keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(6vw,4vh) scale(1.12)}}
+@media (prefers-reduced-motion:reduce){#blobs i{animation:none}}
+body{background:var(--bg)!important;min-height:100vh}
+/* Starry night background */
+#blobs{display:none!important}
+#stars{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at 50% 0%,rgba(91,140,255,.22),transparent 60%)}
+#stars i{position:absolute;border-radius:50%;background:#fff;box-shadow:0 0 6px 1px rgba(150,190,255,.85);animation:twinkle 4s ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.25}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){#stars i{animation:none}}
+body{background:var(--bg)!important;min-height:100vh}
+</style>
+</head>
+<body>
+<div id="stars" aria-hidden="true"><i style="left:32.4%;top:15.1%;width:1px;height:1px;animation-duration:2.3s;animation-delay:3.2s"></i><i style="left:36.6%;top:5.8%;width:1.5px;height:1.5px;animation-duration:2.1s;animation-delay:2.6s"></i><i style="left:7.0%;top:9.1%;width:2.5px;height:2.5px;animation-duration:2.2s;animation-delay:3.4s"></i><i style="left:94.7%;top:63.1%;width:1px;height:1px;animation-duration:4.3s;animation-delay:2.4s"></i><i style="left:97.6%;top:4.7%;width:1.5px;height:1.5px;animation-duration:3.2s;animation-delay:0.9s"></i><i style="left:11.8%;top:30.8%;width:1.5px;height:1.5px;animation-duration:2.4s;animation-delay:3.4s"></i><i style="left:18.8%;top:9.7%;width:1px;height:1px;animation-duration:4.3s;animation-delay:3.7s"></i><i style="left:49.6%;top:53.2%;width:2px;height:2px;animation-duration:3.9s;animation-delay:5.5s"></i><i style="left:36.2%;top:24.8%;width:1.5px;height:1.5px;animation-duration:4.8s;animation-delay:1.5s"></i><i style="left:57.4%;top:52.5%;width:2px;height:2px;animation-duration:4.9s;animation-delay:1.7s"></i><i style="left:98.0%;top:11.8%;width:2.5px;height:2.5px;animation-duration:2.7s;animation-delay:2.1s"></i><i style="left:93.3%;top:42.2%;width:1px;height:1px;animation-duration:5.1s;animation-delay:3.4s"></i><i style="left:87.5%;top:31.4%;width:2px;height:2px;animation-duration:4.4s;animation-delay:3.5s"></i><i style="left:45.6%;top:84.0%;width:2px;height:2px;animation-duration:3.9s;animation-delay:4.0s"></i><i style="left:6.1%;top:70.1%;width:2.5px;height:2.5px;animation-duration:3.1s;animation-delay:2.3s"></i><i style="left:66.9%;top:2.3%;width:2.5px;height:2.5px;animation-duration:3.4s;animation-delay:3.7s"></i><i style="left:49.4%;top:21.8%;width:2px;height:2px;animation-duration:2.5s;animation-delay:1.5s"></i><i style="left:39.1%;top:87.1%;width:1px;height:1px;animation-duration:2.7s;animation-delay:2.4s"></i><i style="left:27.8%;top:13.7%;width:2.5px;height:2.5px;animation-duration:5.5s;animation-delay:1.7s"></i><i style="left:41.5%;top:35.9%;width:2.5px;height:2.5px;animation-duration:5.8s;animation-delay:0.9s"></i><i style="left:17.6%;top:23.2%;width:1.5px;height:1.5px;animation-duration:2.0s;animation-delay:5.0s"></i><i style="left:18.2%;top:28.2%;width:1.5px;height:1.5px;animation-duration:3.7s;animation-delay:2.2s"></i><i style="left:56.6%;top:95.3%;width:1px;height:1px;animation-duration:3.8s;animation-delay:5.2s"></i><i style="left:95.2%;top:68.1%;width:2.5px;height:2.5px;animation-duration:3.6s;animation-delay:2.4s"></i><i style="left:48.2%;top:40.0%;width:1.5px;height:1.5px;animation-duration:2.3s;animation-delay:1.3s"></i><i style="left:16.2%;top:34.0%;width:1px;height:1px;animation-duration:2.4s;animation-delay:3.4s"></i><i style="left:53.7%;top:94.9%;width:1px;height:1px;animation-duration:2.3s;animation-delay:1.2s"></i><i style="left:37.6%;top:63.4%;width:2px;height:2px;animation-duration:4.4s;animation-delay:2.8s"></i><i style="left:11.5%;top:48.8%;width:2.5px;height:2.5px;animation-duration:3.9s;animation-delay:1.9s"></i><i style="left:14.4%;top:75.0%;width:2px;height:2px;animation-duration:3.9s;animation-delay:4.2s"></i><i style="left:51.6%;top:20.5%;width:2px;height:2px;animation-duration:2.6s;animation-delay:3.3s"></i><i style="left:2.7%;top:52.8%;width:1px;height:1px;animation-duration:4.8s;animation-delay:1.6s"></i><i style="left:36.7%;top:16.7%;width:1.5px;height:1.5px;animation-duration:4.1s;animation-delay:4.7s"></i><i style="left:33.0%;top:22.3%;width:1.5px;height:1.5px;animation-duration:5.2s;animation-delay:4.9s"></i><i style="left:74.0%;top:22.7%;width:2.5px;height:2.5px;animation-duration:3.4s;animation-delay:0.2s"></i><i style="left:2.8%;top:27.9%;width:2px;height:2px;animation-duration:2.8s;animation-delay:3.6s"></i><i style="left:34.4%;top:80.9%;width:2px;height:2px;animation-duration:5.8s;animation-delay:2.2s"></i><i style="left:22.0%;top:22.7%;width:1.5px;height:1.5px;animation-duration:3.4s;animation-delay:2.9s"></i><i style="left:98.5%;top:61.0%;width:1px;height:1px;animation-duration:3.9s;animation-delay:3.9s"></i><i style="left:80.0%;top:8.5%;width:1px;height:1px;animation-duration:5.6s;animation-delay:4.7s"></i><i style="left:75.0%;top:47.8%;width:1.5px;height:1.5px;animation-duration:3.7s;animation-delay:3.8s"></i><i style="left:8.7%;top:94.6%;width:2.5px;height:2.5px;animation-duration:3.9s;animation-delay:4.5s"></i><i style="left:8.5%;top:15.9%;width:1.5px;height:1.5px;animation-duration:2.1s;animation-delay:3.5s"></i><i style="left:46.5%;top:65.6%;width:2.5px;height:2.5px;animation-duration:4.6s;animation-delay:2.1s"></i><i style="left:54.9%;top:13.1%;width:1px;height:1px;animation-duration:5.2s;animation-delay:4.4s"></i><i style="left:10.3%;top:74.9%;width:1.5px;height:1.5px;animation-duration:3.7s;animation-delay:5.2s"></i><i style="left:82.6%;top:21.1%;width:2px;height:2px;animation-duration:2.9s;animation-delay:3.0s"></i><i style="left:76.4%;top:32.6%;width:2.5px;height:2.5px;animation-duration:5.3s;animation-delay:0.4s"></i><i style="left:74.0%;top:89.8%;width:2.5px;height:2.5px;animation-duration:5.3s;animation-delay:5.3s"></i><i style="left:13.1%;top:15.2%;width:1px;height:1px;animation-duration:5.5s;animation-delay:4.7s"></i><i style="left:60.9%;top:77.6%;width:1.5px;height:1.5px;animation-duration:2.7s;animation-delay:2.8s"></i><i style="left:72.5%;top:55.6%;width:2px;height:2px;animation-duration:4.7s;animation-delay:3.2s"></i><i style="left:48.2%;top:77.6%;width:1px;height:1px;animation-duration:3.0s;animation-delay:1.7s"></i><i style="left:77.2%;top:50.8%;width:1px;height:1px;animation-duration:5.0s;animation-delay:5.5s"></i><i style="left:44.3%;top:61.3%;width:1.5px;height:1.5px;animation-duration:4.8s;animation-delay:2.7s"></i><i style="left:53.3%;top:47.8%;width:1.5px;height:1.5px;animation-duration:4.8s;animation-delay:5.3s"></i><i style="left:94.2%;top:26.0%;width:1.5px;height:1.5px;animation-duration:5.4s;animation-delay:0.8s"></i><i style="left:12.2%;top:44.2%;width:1px;height:1px;animation-duration:4.7s;animation-delay:2.6s"></i><i style="left:21.3%;top:30.3%;width:1px;height:1px;animation-duration:5.6s;animation-delay:0.9s"></i><i style="left:71.6%;top:66.0%;width:1.5px;height:1.5px;animation-duration:3.0s;animation-delay:0.8s"></i><i style="left:46.8%;top:74.7%;width:1px;height:1px;animation-duration:3.6s;animation-delay:2.9s"></i><i style="left:99.0%;top:83.2%;width:1.5px;height:1.5px;animation-duration:4.8s;animation-delay:6.0s"></i><i style="left:40.4%;top:42.1%;width:2px;height:2px;animation-duration:3.3s;animation-delay:4.3s"></i><i style="left:1.9%;top:55.4%;width:2.5px;height:2.5px;animation-duration:4.8s;animation-delay:2.3s"></i><i style="left:51.7%;top:29.5%;width:1px;height:1px;animation-duration:2.5s;animation-delay:5.5s"></i><i style="left:22.9%;top:87.6%;width:1px;height:1px;animation-duration:3.1s;animation-delay:0.2s"></i><i style="left:77.9%;top:27.0%;width:1.5px;height:1.5px;animation-duration:5.3s;animation-delay:5.1s"></i><i style="left:67.6%;top:94.6%;width:2.5px;height:2.5px;animation-duration:2.6s;animation-delay:5.5s"></i><i style="left:57.1%;top:70.0%;width:1px;height:1px;animation-duration:3.1s;animation-delay:4.8s"></i><i style="left:18.3%;top:89.5%;width:2px;height:2px;animation-duration:5.8s;animation-delay:3.8s"></i></div>
+<div id="blobs" aria-hidden="true"><i></i><i></i><i></i></div>
+<div id="wall" aria-hidden="true"></div>
+<main>
+<h1>Anime Tracker</h1>
+<p class="sub">Works offline. Everything is saved in this browser on this device.</p>
+
+<div id="warn">Saving is unavailable in this browser, so changes will be lost when you close the page. Use Export to keep a copy.</div>
+<div class="stats" id="stats"></div>
+<div class="bar">
+  <input id="q" type="search" placeholder="Search titles" aria-label="Search titles">
+  <select id="sort" aria-label="Sort">
+    <option value="upd">Recently updated</option>
+    <option value="done">Latest completed</option>
+    <option value="title">Title A–Z</option>
+    <option value="rating">Highest rated</option><option value="seasons">Most seasons</option>
+  </select>
+  <select id="sea" aria-label="Season"><option value="">Any season</option></select>
+  <select id="air" aria-label="Airing status"><option value="">Any status</option><option value="finished">Finished</option><option value="airing">Still airing</option><option value="upcoming">Upcoming</option><option value="unknown">Unknown</option></select>
+  <select id="gen" aria-label="Genre"><option value="">All genres</option><option>Action</option><option>Romance</option><option>Mystery/Drama</option><option>Sports</option><option>Comedy</option><option>Movie</option><option>Other</option></select>
+  <button class="btn" id="add">Add anime</button>
+</div>
+<div class="tabs" id="tabs"></div>
+<ul id="list"></ul>
+<details class="rec" id="rec" open>
+  <summary>Fall 2026 releases</summary>
+  <p class="meta">Premiered September–October 2026. Add any show to your list as Plan to watch. Dates are the announced premiere dates.</p>
+  <ul id="recList"></ul>
+</details>
+<dialog id="archDlg" style="width:min(520px,94vw);max-height:80vh;overflow:auto">
+  <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Archive</h2><button class="btn ghost" id="archClose" type="button">Close</button></div>
+  <p class="sub" style="margin:6px 0 0">Episode times and completion dates</p>
+  <ul id="histList" style="margin-top:12px"></ul>
+</dialog>
+<div class="tools">
+  
+  <button class="btn ghost" id="logBtn">Connect PC log</button>
+  <button class="btn ghost" id="exp">Export backup</button>
+  <button class="btn ghost" id="imp">Import backup</button>
+  <button class="btn ghost" id="bulk">Add posters in bulk</button>
+  <input type="file" id="bulkPick" accept="image/*" multiple hidden>
+  <button class="btn ghost" id="zipBtn">Add posters from ZIP</button>
+  <input type="file" id="zipPick" accept=".zip,application/zip" hidden>
+  <button class="btn ghost" id="detBtn">Add descriptions from JSON</button>
+  <input type="file" id="detPick" accept=".json,application/json" hidden>
+  <input type="file" id="file" accept="application/json" hidden>
+  <input type="file" id="tilePick" accept="image/*" hidden>
+  <span id="msg" role="status"></span>
+</div>
+</main>
+
+<div id="zoom" role="dialog" aria-label="Poster preview"><img id="zImg" alt=""><p id="zTitle"></p><p class="zm" id="zMeta"></p><p class="zd" id="zDesc"></p></div>
+<dialog id="dlg">
+  <form method="dialog" id="f">
+    <h2 id="dt" style="margin:0 0 4px">Add anime</h2>
+    <label for="fTitle">Title</label>
+    <input id="fTitle" required maxlength="120">
+    <label for="fStatus">Status</label>
+    <select id="fStatus"></select>
+    <div class="row">
+      <div><label for="fEp">Episodes watched</label><input id="fEp" type="number" min="0" value="0"></div>
+      <div><label for="fTot">Total episodes</label><input id="fTot" type="number" min="0" placeholder="Unknown"></div>
+    </div>
+    <label for="fRate">Rating (1–10)</label>
+    <input id="fRate" type="number" min="1" max="10" step="0.5" placeholder="Not rated">
+    <label for="fImg">Poster (optional)</label>
+    <input type="file" id="fImg" accept="image/*">
+    <div class="row" style="align-items:center;margin-top:6px"><span class="meta" id="imgInfo"></span><button type="button" class="btn ghost" id="imgClr" hidden>Remove poster</button></div>
+    <label for="fNote">Notes</label>
+    <textarea id="fNote" rows="3" maxlength="500"></textarea>
+    <div class="foot">
+      <button type="button" class="btn ghost" id="del" hidden>Delete</button>
+      <div><button type="button" class="btn ghost" id="cancel">Cancel</button><button class="btn" id="save" value="save">Save</button></div>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const ST=[["watching","Watching","--w"],["planned","Plan to watch","--p"],["completed","Completed","--c"],["hold","On hold","--h"],["dropped","Dropped","--d"]];
+const REC=[
+["A Wild Last Boss Appeared! Season 2","Sep 26"],
+["Overgeared","Sep 27"],
+["As a Reincarnated Aristocrat, I'll Use My Appraisal Skill to Rise in the World Season 3","Sep 27"],
+["The World's Strongest Witch","Oct 7"],
+["The Detective Is Already Dead Season 2","Oct 7"],
+["Black Clover Season 2","October"],
+["The Apothecary Diaries Season 3","October"],
+["Magic Knight Rayearth (reboot)","October"],
+["Aoashi Season 2","October"],
+["Ace of the Diamond act II Season 2 Cour 2","Oct 11"],
+["The Ramparts of Ice Season 2","October"],
+["Tougen Anki: Nikko & Kegon Falls Arc","October"],
+["The Firefly's Bride","October"],
+["Hello, I am a Witch, and My Crush Wants Me to Make a Love Potion!","October"]];
+const PREV=[["Black Clover","completed",0,0,0,"Action"],["Demon Slayer: Kimetsu no Yaiba","completed",0,0,0,"Action"],["Attack on Titan","completed",0,0,0,"Action"],["Jujutsu Kaisen","completed",0,0,0,"Action"],["Solo Leveling","completed",0,0,0,"Action"],["Kaiju No. 8","completed",0,0,0,"Action"],["Hunter × Hunter (2011)","completed",0,0,0,"Action · Completed Aug 20, 2026 · Ep 105 on Aug 18 → ep 141 on Aug 20, 2026 · 1.75×"],["Tokyo Revengers","completed",0,0,0,"Action"],["Dr. Stone","completed",0,0,0,"Action"],["The Daily Life of the Immortal King","completed",0,0,0,"Action"],["Sakamoto Days","completed",0,0,0,"Action"],["The Eminence in Shadow","completed",0,0,0,"Action"],["86: Eighty-Six","completed",0,0,0,"Action · Completed Aug 20, 2026 (S1 + S2)"],["Frieren: Beyond Journey’s End","completed",0,0,0,"Action"],["Darling in the FranXX","completed",0,0,0,"Action"],["The Detective Is Already Dead","completed",0,0,0,"Action · Completed Aug 12, 2026 (S1)"],["Spy × Family","completed",0,0,0,"Action"],["Death Note","completed",0,0,0,"Action"],["An Archdemon’s Dilemma: How to Love Your Elf Bride","completed",0,0,0,"Action"],["Witch Hat Atelier","completed",0,0,0,"Action"],["The Fragrant Flower Blooms with Dignity","completed",0,0,5,"Romance · Started Sep 8, 2026 · Completed Sep 2026 · GOD TIER"],["Kaguya-sama: Love Is War","completed",0,0,0,"Romance · Completed S2 on Sep 15, 2026 (all seasons done)"],["Kaguya-sama: The First Kiss That Never Ends","completed",0,0,0,"Romance"],["The Angel Next Door Spoils Me Rotten","completed",0,0,0,"Romance · Started Nov 3, 2026 (rewatch) · Completed Nov 4, 2026 (rewatch)"],["My Dress-Up Darling","completed",0,0,0,"Romance"],["Horimiya","completed",0,0,0,"Romance"],["Your Lie in April","completed",0,0,0,"Romance"],["Alya Sometimes Hides Her Feelings in Russian","completed",0,0,0,"Romance"],["I Made Friends with the Second Prettiest Girl in My Class","completed",0,0,0,"Romance"],["More Than a Married Couple, But Not Lovers","completed",0,0,0,"Romance"],["I'm Getting Married to a Girl I Hate in My Class","completed",0,0,0,"Romance"],["My Stepmom’s Daughter Is My Ex","completed",0,0,0,"Romance"],["Watari-kun’s ****** Is About to Collapse","completed",0,0,0,"Romance"],["A Couple of Cuckoos","completed",0,0,0,"Romance · Hindi dub · Started Oct 1, 2026 · Completed Oct 2, 2026"],["Days with My Stepsister","completed",0,0,0,"Romance · Started Oct 4, 2026 (restart) · Completed Oct 5, 2026 · Dropped at ep 3 on Aug 30, then restarted · 2× · Slow, just okay"],["The Dangers in My Heart","completed",0,0,0,"Romance · Completed Oct 7, 2026"],["The 100 Girlfriends Who Really, Really, Really, Really, Really Love You","completed",0,0,0,"Romance · Completed S1 Aug 30, 2026; S2 Sep 2, 2026 · S3 stopped at ep 8, waiting for English dub"],["My Happy Marriage","completed",0,0,0,"Romance"],["Vermeil in Gold","completed",0,0,0,"Romance · Started Oct 1, 2026 · Completed ~Oct 1–2, 2026"],["Love Unseen Beneath the Clear Night Sky","completed",0,0,0,"Romance"],["The Ogre’s Bride","completed",0,0,0,"Romance · Completed Oct 29, 2026 · Enjoyed it (Japanese audio, English subs)"],["Rascal Does Not Dream of Bunny Girl Senpai","completed",0,0,0,"Romance · Started Oct 27, 2026 · Completed Oct 28, 2026 (S1)"],["Can You Keep a Secret? / I Have a Crush at Work","completed",0,0,0,"Romance · Completed Oct 30, 2026 · Liked it, but just okay"],["The Quintessential Quintuplets","completed",0,0,0,"Romance · Started Sep 26, 2026 · Completed by Oct 31, 2026"],["KonoSuba: God’s Blessing on This Wonderful World!","completed",0,0,0,"Comedy · Started Sep 23, 2026 · Completed Sep 26, 2026"],["Oshi no Ko","completed",0,0,0,"Comedy · Started Sep 21, 2026 · Completed ~Sep 22, 2026 (S1 on Sep 21) · 1.75× · Not very interesting"],["Yowayowa Sensei","completed",0,0,0,"Comedy · Completed ~Sep 29, 2026"],["The Maid I Hired Recently Is Mysterious","completed",0,0,0,"Comedy · Started Sep 22, 2026 · Completed Sep 22, 2026"],["Your Name","completed",0,0,0,"Movie"],["Suzume","completed",0,0,0,"Movie"],["A Silent Voice","completed",0,0,0,"Movie"],["Yamada-kun at Lv999","completed",0,0,0,"Romance · Hindi dub"],["Hokkaido Gals Are Super Adorable!","completed",0,0,0,"Romance · Hindi dub · Started Nov 2, 2026 · Completed Nov 2, 2026 · 2× · Just time pass"],["You and I Are Polar Opposites","completed",0,0,0,"Romance · Started Nov 2, 2026 · Completed Nov 2, 2026, 11:48 PM IST · 2×"],["A Condition Called Love","completed",0,0,0,"Romance · Started Nov 4, 2026, 1:25 PM IST · Completed Nov 5, 2026 · 1.5× · Okay / so-so, not rewatchable"],["You Can't Be in a Rom-Com with Your Childhood Friends!","completed",0,0,0,"Romance · Started Oct 31, 2026 · Completed Nov 2, 2026"],["From Overshadowed to Overpowered: Second Reincarnation of a Talentless Sage","watching",1,12,0,"Action · Started Nov 5, 2026 · 1×"],["Tonikawa: Over the Moon for You","watching",0,0,0,"Romance"],["Wistoria: Wand and Sword — Season 2","watching",0,0,0,"Action"],["Hell’s Paradise","planned",0,0,0,"Action"],["Failure Frame","planned",0,0,0,"Action"],["Fate series","planned",0,0,0,"Action"],["Daemons of the Shadow Realm","planned",0,0,0,"Action"],["Sword of the Demon Hunter","planned",0,0,0,"Action"],["Redline","planned",0,0,0,"Action"],["Full Metal Panic!","planned",0,0,0,"Action"],["Overlord","planned",0,0,0,"Action · Hindi dub"],["Loner Life in Another World","planned",0,0,0,"Action"],["Dead Mount Death Play","planned",0,0,0,"Action"],["The Misfit of Demon King Academy","planned",0,0,0,"Action"],["Noblesse: Awakening","planned",0,0,0,"Action"],["Blood Blockade Battlefront","planned",0,0,0,"Action"],["Blood Blockade Battlefront & Beyond","planned",0,0,0,"Action"],["The Demon Sword Master of Excalibur Academy","planned",0,0,0,"Action"],["Ragna Crimson","planned",0,0,0,"Action"],["Otherworldly Munchkin: Let’s Speedrun the Dungeon with Only 1 HP!","planned",0,0,0,"Action"],["Devil May Cry","planned",0,0,0,"Action"],["The Red Ranger Becomes an Adventurer in Another World","planned",0,0,0,"Action"],["Naruto Shippuden","planned",0,0,0,"Action"],["Bleach","planned",0,0,0,"Action"],["Dragon Ball Z","planned",0,0,0,"Action"],["The Rising of the Shield Hero","planned",0,0,0,"Action · Hindi dub"],["Gachiakuta","planned",0,0,0,"Action"],["Chainsaw Man","planned",0,0,0,"Action"],["My Hero Academia","planned",0,0,0,"Action"],["Mushoku Tensei: Jobless Reincarnation","planned",0,0,0,"Action"],["Re:ZERO -Starting Life in Another World-","planned",0,0,0,"Action"],["Tsukimichi: Moonlit Fantasy","planned",0,0,0,"Action"],["Tower of God","planned",0,0,0,"Action · Hindi dub"],["Fire Force","planned",0,0,0,"Action"],["The Wrong Way to Use Healing Magic","planned",0,0,0,"Action"],["That Time I Got Reincarnated as a Slime","planned",0,0,0,"Action"],["NEW SAGA","planned",0,0,0,"Action · Hindi dub"],["The Case Study of Vanitas","planned",0,0,0,"Action"],["Wind Breaker","planned",0,0,0,"Action"],["The Iceblade Sorcerer Shall Rule the World","planned",0,0,0,"Action · Hindi dub"],["The Great Cleric","planned",0,0,0,"Action · Hindi dub"],["The Reincarnation of the Strongest Exorcist in Another World","planned",0,0,0,"Action"],["Clevatess","planned",0,0,0,"Action"],["Assassination Classroom","planned",0,0,0,"Action"],["Berserk of Gluttony","planned",0,0,0,"Action · Hindi dub"],["Arifureta: From Commonplace to World’s Strongest","planned",0,0,0,"Action · Hindi dub"],["A Wild Last Boss Appeared!","planned",0,0,0,"Action · Hindi dub"],["Easygoing Territory Defense by the Optimistic Lord","planned",0,0,0,"Action"],["The World’s Finest Assassin Gets Reincarnated in Another World as an Aristocrat","planned",0,0,0,"Action"],["Kill Blue","planned",0,0,0,"Action"],["Dorohedoro","planned",0,0,0,"Action"],["Farming Life in Another World","planned",0,0,0,"Action"],["The Villager of Level 999","planned",0,0,0,"Action"],["Skeleton Knight in Another World","planned",0,0,0,"Action"],["The Exiled Heavy Knight Knows How to Game the System","planned",0,0,0,"Action"],["The Irregular at Magic High School","planned",0,0,0,"Action"],["I Got a Cheat Skill in Another World and Became Unrivaled in the Real World, Too","planned",0,0,0,"Action · Hindi dub"],["The Aristocrat’s Otherworldly Adventure","planned",0,0,0,"Action"],["Akashic Records of Bastard Magic Instructor","planned",0,0,0,"Action"],["The Greatest Demon Lord Is Reborn as a Typical Nobody","planned",0,0,0,"Action"],["The Strongest Sage with the Weakest Crest","planned",0,0,0,"Action"],["Classroom of the Elite","planned",0,0,0,"Action"],["In/Spectre","planned",0,0,0,"Action"],["Sky Wizards Academy","planned",0,0,0,"Action"],["As a Reincarnated Aristocrat, I’ll Use My Appraisal Skill to Rise in the World","planned",0,0,0,"Action"],["Trapped in a Dating Sim","planned",0,0,0,"Action"],["My Instant Death Ability Is So Overpowered","planned",0,0,0,"Action"],["The Genius Prince’s Guide to Raising a Nation Out of Debt","planned",0,0,0,"Action"],["Space Battleship Yamato","planned",0,0,0,"Action"],["Is It Wrong to Try to Pick Up Girls in a Dungeon? (DanMachi)","planned",0,0,0,"Action"],["My Status as an Assassin Obviously Exceeds the Hero’s","planned",0,0,0,"Action · Hindi dub"],["Chained Soldier","planned",0,0,0,"Action"],["Black Butler","planned",0,0,0,"Action"],["Akame ga Kill!","planned",0,0,0,"Action"],["Code Geass: Lelouch of the Rebellion","planned",0,0,0,"Action"],["Sword Art Online","planned",0,0,0,"Action"],["Tengen Toppa Gurren Lagann","planned",0,0,0,"Action"],["Fullmetal Alchemist: Brotherhood","planned",0,0,0,"Action"],["Noragami","planned",0,0,0,"Action"],["Baccano!","planned",0,0,0,"Action"],["Tokyo Ghoul","planned",0,0,0,"Action"],["Blue Exorcist","planned",0,0,0,"Action"],["Darker than Black","planned",0,0,0,"Action"],["Beyond the Boundary","planned",0,0,0,"Action"],["takt op.Destiny","planned",0,0,0,"Action"],["Durarara!!","planned",0,0,0,"Action"],["Monogatari Series","planned",0,0,0,"Action"],["Fate/stay night [Unlimited Blade Works]","planned",0,0,0,"Action"],["Yu-Gi-Oh!","planned",0,0,0,"Action"],["Initial D","planned",0,0,0,"Action"],["Vinland Saga","watching",18,24,0,"Action · S1: on ep 19 (last recorded early Oct 2026)"],["Summer Time Rendering","planned",0,0,0,"Action"],["Steins;Gate","planned",0,0,0,"Action"],["91 Days","planned",0,0,0,"Action"],["Terror in Resonance","planned",0,0,0,"Action"],["Seraph of the End: Vampire Reign","planned",0,0,0,"Action"],["Orb: On the Movements of the Earth","planned",0,0,0,"Action"],["Sentenced to Be a Hero","planned",0,0,0,"Action"],["Fairy Tail","planned",0,0,0,"Action"],["Golden Kamuy","planned",0,0,0,"Action"],["Wolf’s Rain","planned",0,0,0,"Action"],["Samurai Champloo","planned",0,0,0,"Action"],["JoJo’s Bizarre Adventure","planned",0,0,0,"Action"],["Dororo","planned",0,0,0,"Action"],["Gintama","planned",0,0,0,"Action"],["One Piece","planned",0,0,0,"Action"],["Log Horizon","planned",0,0,0,"Action"],["Hellsing Ultimate","planned",0,0,0,"Action"],["Made in Abyss","planned",0,0,0,"Action"],["Another","planned",0,0,0,"Action"],["Corpse Party: Tortured Souls","planned",0,0,0,"Action"],["Mononoke","planned",0,0,0,"Action"],["Future Diary (Mirai Nikki)","planned",0,0,0,"Action"],["Parasyte -the maxim-","planned",0,0,0,"Action"],["Shiki","planned",0,0,0,"Action"],["Higurashi: When They Cry","planned",0,0,0,"Action"],["Hell Girl","planned",0,0,0,"Action"],["Neon Genesis Evangelion","planned",0,0,0,"Action"],["Monster","planned",0,0,0,"Action"],["The Unwanted Undead Adventurer","planned",0,0,0,"Action"],["I’m Quitting Heroing","planned",0,0,0,"Action"],["Heavenly Delusion","planned",0,0,0,"Action"],["No Game No Life","planned",0,0,0,"Action"],["The Ancient Magus’ Bride","planned",0,0,0,"Action"],["The Outcast’s Restaurant!","planned",0,0,0,"Action"],["Delicious in Dungeon","planned",0,0,0,"Action"],["I Left My A-Rank Party to Help My Former Students Reach the Dungeon Depths!","planned",0,0,0,"Action · Hindi dub"],["Jack of All Trades, Party of None","planned",0,0,0,"Action"],["My Gift Lvl 9999 Unlimited Gacha","planned",0,0,0,"Action"],["The Healer Who Was Banished From His Party, Is, in Fact, the Strongest","planned",0,0,0,"Action"],["Am I Actually the Strongest?","planned",0,0,0,"Action"],["Aoashi","planned",0,0,0,"Sports"],["Kuroko’s Basketball","planned",0,0,0,"Sports"],["Inazuma Eleven","planned",0,0,0,"Sports"],["Megalobox","planned",0,0,0,"Sports"],["Hajime no Ippo","planned",0,0,0,"Sports"],["Run with the Wind","planned",0,0,0,"Sports"],["Slam Dunk","planned",0,0,0,"Sports"],["Haikyu!!","planned",0,0,0,"Sports"],["Free! – Iwatobi Swim Club","planned",0,0,0,"Sports"],["Tomorrow’s Joe","planned",0,0,0,"Sports"],["Eyeshield 21","planned",0,0,0,"Sports"],["Ace of Diamond","planned",0,0,0,"Sports"],["SK8 the Infinity","planned",0,0,0,"Sports"],["Blue Lock","planned",0,0,0,"Sports"],["Ahiru no Sora","planned",0,0,0,"Sports"],["Golden Time","planned",0,0,0,"Romance"],["Toradora!","planned",0,0,0,"Romance"],["Love Is Indivisible by Twins","planned",0,0,0,"Romance"],["Anyway, I’m Falling in Love with You","planned",0,0,0,"Romance"],["My Little Senpai","planned",0,0,0,"Romance"],["There Was a Cute Girl in the Hero’s Party, So I Tried Confessing to Her","planned",0,0,0,"Romance"],["End This Love Game","planned",0,0,0,"Romance"],["Gals Can’t Be Kind","planned",0,0,0,"Romance"],["Rent-A-Girlfriend","planned",0,0,0,"Romance"],["I Want to Love You Till Your Dying Day","planned",0,0,0,"Romance"],["Witch Craft Works","planned",0,0,0,"Romance"],["The Warrior Princess and the Barbarian King","planned",0,0,0,"Romance"],["Noble Reincarnation: Born Blessed, So I’ll Obtain Ultimate Power","planned",0,0,0,"Romance"],["Studio Apartment, Good Lighting, Angel Included","planned",0,0,0,"Romance"],["Blue Box","planned",0,0,0,"Romance"],["Girl Can’t Be Kind to an Otaku","planned",0,0,0,"Romance"],["From Me to You","planned",0,0,0,"Romance"],["Grand Blue Dreaming","planned",0,0,0,"Romance"],["Our Dating Story","planned",0,0,0,"Romance"],["Chitose Is in the Ramune Bottle","planned",0,0,0,"Romance"],["Cupid’s Chocolates","planned",0,0,0,"Romance"],["Hanaori-san Still Wants to Fight in the Next Life","planned",0,0,0,"Romance"],["Gods’ Games We Play","planned",0,0,0,"Romance"],["School Days","planned",0,0,0,"Romance"],["Tsuki ga Kirei","planned",0,0,0,"Romance"],["Masamune-kun’s Revenge","planned",0,0,0,"Romance"],["Just Because!","planned",0,0,0,"Romance"],["Scum’s Wish","planned",0,0,0,"Romance"],["Boarding School Juliet","planned",0,0,0,"Romance"],["My Teen Romantic Comedy SNAFU (Oregairu)","planned",0,0,0,"Romance"],["Josee, the Tiger and the Fish","planned",0,0,0,"Romance"],["A Whisker Away","planned",0,0,0,"Romance"],["Fruits Basket","planned",0,0,0,"Romance"],["Weathering with You","planned",0,0,0,"Romance"],["Komi Can’t Communicate","planned",0,0,0,"Romance"],["Don’t Toy with Me, Miss Nagatoro","planned",0,0,0,"Romance"],["Osamake: Romcom Where the Childhood Friend Won’t Lose","planned",0,0,0,"Romance"],["A Sign of Affection","planned",0,0,0,"Romance"],["The Girl I Like Forgot Her Glasses","planned",0,0,0,"Romance"],["Can a Boy-Girl Friendship Hold Up? (No, It Can’t!!)","planned",0,0,0,"Romance"],["My Awkward Senpai","planned",0,0,0,"Romance"],["Citrus","planned",0,0,0,"Romance"],["Recently, My Sister Is Unusual","planned",0,0,0,"Romance"],["We Never Learn: BOKUBEN","planned",0,0,0,"Romance"],["The World God Only Knows","planned",0,0,0,"Romance"],["Monster Musume: Everyday Life with Monster Girls","planned",0,0,0,"Romance"],["Tying the Knot with an Amagami Sister","planned",0,0,0,"Romance"],["Dealing with Mikadono Sisters Is a Breeze","planned",0,0,0,"Romance"],["Date A Live","planned",0,0,0,"Romance"],["Trinity Seven","planned",0,0,0,"Romance"],["Saekano: How to Raise a Boring Girlfriend","planned",0,0,0,"Romance"],["A Galaxy Next Door","planned",0,0,0,"Romance"],["Too Many Losing Heroines!","planned",0,0,0,"Romance"],["Plastic Memories","planned",0,0,0,"Romance"],["Summer Ghost","planned",0,0,0,"Romance"],["I Want to Eat Your Pancreas","planned",0,0,0,"Romance"],["Anohana: The Flower We Saw That Day","planned",0,0,0,"Romance"],["Violet Evergarden","planned",0,0,0,"Romance"],["Love Through a Prism","planned",0,0,0,"Romance"],["The Dreaming Boy Is a Realist","planned",0,0,0,"Romance"],["Oresuki: Are You the Only One Who Loves Me?","planned",0,0,0,"Romance"],["Witch Watch","planned",0,0,0,"Romance"],["The Ramparts of Ice","planned",0,0,0,"Romance"],["Special A","planned",0,0,0,"Romance"],["High School DxD","planned",0,0,0,"Romance"],["Tune In to the Midnight Heart","planned",0,0,0,"Romance"],["Pseudo Harem","planned",0,0,0,"Romance"],["Sugar Apple Fairy Tale","planned",0,0,0,"Romance"],["Takopi’s Original Sin","planned",0,0,0,"Mystery/Drama"],["Ticket to Die","planned",0,0,0,"Mystery/Drama"],["Black Grade","planned",0,0,0,"Mystery/Drama"],["Dark Moon: The Blood Altar","planned",0,0,0,"Mystery/Drama"],["Lookism","planned",0,0,0,"Mystery/Drama"],["Mashle: Magic and Muscles","planned",0,0,0,"Mystery/Drama"],["Qualidea Code","planned",0,0,0,"Mystery/Drama"],["Elfen Lied","planned",0,0,0,"Mystery/Drama"],["Erased","planned",0,0,0,"Mystery/Drama"],["Tokyo Magnitude 8.0","planned",0,0,0,"Mystery/Drama"],["Clannad: After Story","planned",0,0,0,"Mystery/Drama"],["ReLIFE","planned",0,0,0,"Mystery/Drama"],["Mushishi","planned",0,0,0,"Mystery/Drama"],["School Babysitters","planned",0,0,0,"Mystery/Drama"],["Iroduku: The World in Colors","planned",0,0,0,"Mystery/Drama"],["Call of the Night","planned",0,0,0,"Mystery/Drama"],["To You in the Beyond","planned",0,0,0,"Mystery/Drama"],["Ranking of Kings","planned",0,0,0,"Mystery/Drama"],["Cyberpunk: Edgerunners","planned",0,0,0,"Mystery/Drama"],["Grave of the Fireflies","planned",0,0,0,"Mystery/Drama"],["To Your Eternity","planned",0,0,0,"Mystery/Drama"],["Angel Beats!","planned",0,0,0,"Mystery/Drama"],["The Promised Neverland","planned",0,0,0,"Mystery/Drama"],["The Fruit of Grisaia","planned",0,0,0,"Mystery/Drama"],["Domestic Girlfriend","planned",0,0,0,"Mystery/Drama"],["Koi Kaze","planned",0,0,0,"Mystery/Drama"],["Hensuki: Are You Willing to Fall in Love with a Pervert, as Long as She’s a Cutie?","planned",0,0,0,"Mystery/Drama"],["Agents of the Four Seasons: Dance of Spring","planned",0,0,0,"Mystery/Drama"],["To LOVE-Ru","planned",0,0,0,"Mystery/Drama"],["Our Last Crusade or the Rise of a New World","planned",0,0,0,"Mystery/Drama"],["Summer Pockets","planned",0,0,0,"Mystery/Drama"],["Monster Girl Doctor","planned",0,0,0,"Mystery/Drama"],["My One-Hit Kill Sister","planned",0,0,0,"Other"],["Oreimo: My Little Sister Can’t Be This Cute","planned",0,0,0,"Other"],["Kiss × Sis","planned",0,0,0,"Other"],["Eromanga Sensei","planned",0,0,0,"Other"],["My Little Monster","planned",0,0,0,"Other"],["Kamisama Kiss","planned",0,0,0,"Other"],["Ao Haru Ride","planned",0,0,0,"Other"],["Yona of the Dawn","planned",0,0,0,"Other"],["Snow White with the Red Hair","planned",0,0,0,"Other"],["Wotakoi: Love Is Hard for Otaku","planned",0,0,0,"Other"],["Maid Sama!","planned",0,0,0,"Other"],["Rich Girl Caretaker (Saijō no Osewa)","hold",8,12,0,"Romance · On hold: ep 9 not available in Hindi"],["Into the Forest of Fireflies' Light","planned",0,0,0,"Romance"],["5 Centimeters per Second","planned",0,0,0,"Romance"],["Yamada-kun and the Seven Witches","planned",0,0,0,"Romance"],["Lovely Complex","planned",0,0,0,"Romance"],["Giji Harem","planned",0,0,0,"Romance"],["Ride Your Wave","planned",0,0,0,"Romance"],["Charlotte","planned",0,0,0,"Romance"],["Blue Spring Ride","planned",0,0,0,"Romance"],["Kubo Won't Let Me Be Invisible","planned",0,0,0,"Romance"],["Romantic Killer","planned",0,0,0,"Romance"],["Tsuredure Children","planned",0,0,0,"Romance"],["Orange","planned",0,0,0,"Romance"],["The Garden of Words","planned",0,0,0,"Romance"],["7th Time Loop: The Villainess Enjoys a Carefree Life Married to Her Worst Enemy!","planned",0,0,0,"Romance"],["Love, Chunibyo & Other Delusions!","planned",0,0,0,"Romance"],["Hello World","planned",0,0,0,"Romance"],["Tomo-chan Is a Girl!","planned",0,0,0,"Romance"],["Monthly Girls' Nozaki-kun","planned",0,0,0,"Romance"],["Ranma ½","planned",0,0,0,"Romance"],["The Familiar of Zero","planned",0,0,0,"Romance"],["365 Days to the Wedding","planned",0,0,0,"Romance"],["2.5 Dimensional Seduction","planned",0,0,0,"Romance"],["The Foolish Angel Dances with the Devil","planned",0,0,0,"Romance"],["My First Girlfriend Is a Gal (Hajimete no Gal)","planned",0,0,0,"Romance"],["The World Is Still Beautiful","planned",0,0,0,"Romance"],["Magi: The Labyrinth of Magic","planned",0,0,0,"Action"],["B: The Beginning","planned",0,0,0,"Action"],["Fate/Zero","planned",0,0,0,"Action"],["The Vexations of a Shut-In Vampire Princess","planned",0,0,0,"Action"],["To Be Winner","planned",0,0,0,"Action"],["Shinkansen Henkei Robo Shinkalion","planned",0,0,0,"Action"],["Maoyu: Archenemy & Hero","planned",0,0,0,"Other"],["Record of Ragnarok","planned",0,0,0,"Other"],["The Kingdoms of Ruin","planned",0,0,0,"Other"],["Villainess Level 99: I May Be the Hidden Boss but I’m Not the Demon Lord","planned",0,0,0,"Other"],["The Shiunji Family Children","completed",0,0,0,"Romance"]];
+const KEY="anime-tracker-v1";
+let items=[],filter="all",editId=null,canSave=true;
+const $=id=>document.getElementById(id);
+function load(){try{items=JSON.parse(localStorage.getItem(KEY)||"[]");if(!Array.isArray(items))items=[]}catch(e){items=[];try{localStorage.setItem("t","1")}catch(_){canSave=false}}
+ try{localStorage.setItem("_t","1");localStorage.removeItem("_t")}catch(e){canSave=false}
+ $("warn").style.display=canSave?"none":"block"}
+let LOGH=null,LOGPREV={},LOGQ=Promise.resolve();
+function fmtLog(d){const p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())}
+function logLines(){const out=[];const now=new Date();
+  items.forEach(i=>{const k=JSON.stringify([i.status,i.ep,i.tot,i.rw||0,i.note||""]);const prev=LOGPREV[i.id];
+    if(prev===undefined){ if(Object.keys(LOGPREV).length) out.push(fmtLog(now)+" | NEW | "+i.title) }
+    else if(prev!==k){const pv=JSON.parse(prev),ch=[];
+      if(pv[0]!==i.status)ch.push("status "+pv[0]+" -> "+i.status);
+      if(pv[1]!==i.ep)ch.push("ep "+pv[1]+" -> "+i.ep);
+      if(pv[3]!==(i.rw||0))ch.push("rewatch "+(i.rw||0));
+      if(!/Completed/.test(pv[4])&&/Completed/.test(i.note||""))ch.push("completed");
+      out.push(fmtLog(now)+" | "+i.title+" | "+(ch.join(", ")||"updated"))}
+    LOGPREV[i.id]=k});
+  Object.keys(LOGPREV).forEach(id=>{if(!items.some(x=>x.id===id)){out.push(fmtLog(now)+" | DELETED | "+id);delete LOGPREV[id]}});
+  return out}
+function writeLog(lines){if(!LOGH||!lines.length)return;
+  LOGQ=LOGQ.then(async()=>{const f=await LOGH.getFile();const w=await LOGH.createWritable({keepExistingData:true});await w.seek(f.size);await w.write(lines.join("\n")+"\n");await w.close()}).catch(()=>say("Could not write to the PC log. Click Connect PC log again."))}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){canSave=false;$("warn").style.display="block"}writeLog(logLines())}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function label(k){return ST.find(s=>s[0]===k)}
+function cd(n){let best=0;(n||"").split(" · ").forEach(s=>{if(/^Started/.test(s))return;
+  const re=/(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\.? (?:(\d{1,2})(?:[–-](\d{1,2}))?, )?(\d{4})/g;let m;
+  while((m=re.exec(s))){const d=+(m[3]||m[2]||15);const t=Date.UTC(+m[4],"JanFebMarAprMayJunJulAugSepOctNovDec".indexOf(m[1])/3,d);if(t>best)best=t}});return best}
+let curImg="";
+const IMGS={};let idb=null;
+function idbOpen(){return new Promise(res=>{try{const r=indexedDB.open("anime-posters",1);r.onupgradeneeded=()=>r.result.createObjectStore("p");r.onsuccess=()=>res(r.result);r.onerror=()=>res(null)}catch(e){res(null)}})}
+async function idbLoad(){idb=await idbOpen();if(!idb)return;await new Promise(res=>{try{const rq=idb.transaction("p").objectStore("p").openCursor();rq.onsuccess=()=>{const c=rq.result;if(c){IMGS[c.key]=c.value;c.continue()}else res()};rq.onerror=()=>res()}catch(e){res()}})}
+function idbPut(k,v){if(!idb)return;try{const s=idb.transaction("p","readwrite").objectStore("p");v?s.put(v,k):s.delete(k)}catch(e){}}
+function setImg(it,v){if(idb){if(v)IMGS[it.id]=v;else delete IMGS[it.id];idbPut(it.id,v);it.img=""}else{it.img=v}}
+function getImg(it){return IMGS[it.id]||it.img||""}
+function migrateImgs(){if(!idb)return;items.forEach(i=>{if(i.img){IMGS[i.id]=i.img;idbPut(i.id,i.img);i.img=""}})}
+function hue(t){let h=0;for(const c of t)h=(h*31+c.charCodeAt(0))%360;return h}
+function ini(t){const w=t.replace(/[^\p{L}\p{N} ]/gu,"").split(" ").filter(x=>x&&!/^(the|a|an|of)$/i.test(x));return((w[0]||"?")[0]+((w[1]||"")[0]||(w[0]||"")[1]||"")).toUpperCase()}
+function pic(i){const im=getImg(i);const ok=im&&im.indexOf("data:image/")===0;const h=hue(i.title);
+  return `<div class="pic" role="button" tabindex="0" aria-label="Poster for ${esc(i.title)}" data-id="${i.id}" style="${ok?"background-image:url("+im+")":"background:linear-gradient(150deg,hsl("+h+",55%,42%),hsl("+((h+45)%360)+",60%,26%))"}">${ok?"":ini(i.title)}</div>`}
+function imgUI(){$("imgInfo").textContent=curImg?"Poster added":"No poster. A colored tile is used.";$("imgClr").hidden=!curImg}
+$("fImg").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{const im=new Image();im.onload=()=>{const W=320,H=480,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+    const k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;x.drawImage(im,(W-w)/2,(H-h)/2,w,h);curImg=c.toDataURL("image/jpeg",.82);imgUI()};
+    im.onerror=()=>say("Couldn't read that image.");im.src=r.result};r.readAsDataURL(f);e.target.value=""};
+$("imgClr").onclick=()=>{curImg="";imgUI()};
+let DETS={};try{DETS=JSON.parse(localStorage.getItem("anime-details-v1")||"{}")}catch(e){DETS={}}
+const GEN=["Action","Romance","Mystery/Drama","Sports","Comedy","Movie","Other"];
+const MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
+const SO={Winter:1,Spring:2,Summer:3,Fall:4};
+function seasonOf(i){let y="",m=0;const mm=(i.note||"").match(/Started (\w{3})\w* (?:\d{1,2}, )?(\d{4})/);
+  if(mm&&MON[mm[1].toLowerCase()]){m=MON[mm[1].toLowerCase()];y=mm[2]}
+  else{const d=DETS[i.id]||{};if(d.d){m=+d.d.slice(5,7);y=d.d.slice(0,4)}}
+  if(!m||!y)return "";return (m<=3?"Winter":m<=6?"Spring":m<=9?"Summer":"Fall")+" "+y}
+function renderSeasons(){const sel=$("sea");const cur=sel.value;
+  const set=[...new Set(items.map(seasonOf).filter(Boolean))].sort((a,b)=>{const[sa,ya]=a.split(" ");const[sb,yb]=b.split(" ");return (yb-ya)||(SO[sb]-SO[sa])});
+  sel.innerHTML='<option value="">Any season</option>'+set.map(x=>`<option value="${x}">${x}</option>`).join("");
+  sel.value=set.includes(cur)?cur:""}
+function airKey(i){if(upcomingOf(i))return "upcoming";const s=(DETS[i.id]||{}).s||"";if(!s)return "unknown";if(/ended|cancel|released/i.test(s))return "finished";if(/returning|production|planned|pilot/i.test(s))return "airing";return "unknown"}
+function airLabel(i){const k=airKey(i);return k==="finished"?"Finished":k==="airing"?"Still airing":""}
+function genreOf(i){const g=(i.note||"").split(" \u00b7 ")[0];return GEN.includes(g)?g:""}
+function upcomingOf(i){const d=DETS[i.id]||{};if(/planned|production|pilot/i.test(d.s||""))return true;const today=new Date().toISOString().slice(0,10);return !!(d.x&&d.x>today)}
+function allGenres(i){const d=DETS[i.id]||{};const g=[];if(upcomingOf(i))g.push("Upcoming");if(genreOf(i))g.push(genreOf(i));(d.g||[]).forEach(x=>{if(!g.includes(x))g.push(x)});if(airLabel(i))g.unshift(airLabel(i));if(d.n)g.push(d.n+(d.n>1?" seasons":" season"));g.push(seasonOf(i)||"Season unknown");return g}
+function chipsHtml(i){const d=DETS[i.id]||{};const g=allGenres(i);
+  return(g.length?`<div class="chips">${g.map(x=>`<span class="chip">${esc(x)}</span>`).join("")}</div>`:"")+(d.o?`<p class="desc">${esc(d.o)}</p>`:"")}
+function saveDets(){try{localStorage.setItem("anime-details-v1",JSON.stringify(DETS))}catch(e){}}
+function showInfo(it){const im=getImg(it),ok=im&&im.indexOf("data:image/")===0,d=DETS[it.id]||{};
+  $("zImg").style.display=ok?"":"none";if(ok){$("zImg").src=im;$("zImg").alt=it.title}
+  $("zTitle").textContent=it.title;
+  $("zMeta").textContent=[d.y,d.r?"\u2605 "+d.r:"",allGenres(it).join(", ")].filter(Boolean).join(" \u00b7 ");
+  $("zDesc").textContent=d.o||"";$("zoom").classList.add("on")}
+function openPic(id){const it=items.find(x=>x.id===id);if(!it)return;
+  const im=getImg(it);if(im&&im.indexOf("data:image/")===0){showInfo(it)}
+  else{picId=id;$("tilePick").click()}}
+$("zoom").onclick=()=>$("zoom").classList.remove("on");
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("zoom").classList.remove("on")});
+let picId=null;
+$("list").addEventListener("click",e=>{const p=e.target.closest(".pic");if(p)openPic(p.dataset.id);const t=e.target.closest(".t");if(t){const it=items.find(x=>x.id===t.dataset.id);if(it)showInfo(it)}});
+$("list").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.classList.contains("pic"))openPic(e.target.dataset.id)});
+$("tilePick").onchange=e=>{const f=e.target.files[0];e.target.value="";if(!f||!picId)return;const it=items.find(x=>x.id===picId);if(!it)return;
+  const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const W=320,H=480,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+    const k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;x.drawImage(im,(W-w)/2,(H-h)/2,w,h);setImg(it,c.toDataURL("image/jpeg",.82));save();render();say("Poster added.")};
+    im.onerror=()=>say("Couldn't read that image.");im.src=r.result};r.readAsDataURL(f)};
+const nrm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
+function shrink(f){return new Promise(res=>{const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const W=320,H=480,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const k=Math.max(W/im.width,H/im.height),w=im.width*k,h=im.height*k;x.drawImage(im,(W-w)/2,(H-h)/2,w,h);res(c.toDataURL("image/jpeg",.82))};im.onerror=()=>res("");im.src=r.result};r.onerror=()=>res("");r.readAsDataURL(f)})}
+$("bulk").onclick=()=>$("bulkPick").click();
+$("bulkPick").onchange=e=>{const fs=[...e.target.files];e.target.value="";if(fs.length)addPosters(fs)};
+async function addPosters(fs){let ok=0;const miss=[];say("Adding posters, please wait…");
+  for(const f of fs){const n=nrm(f.name.replace(/\.[^.]+$/,""));if(!n){miss.push(f.name);continue}
+    const it=items.find(x=>nrm(x.title)===n)||(n.length>3?items.find(x=>{const t=nrm(x.title);return t.includes(n)||n.includes(t)}):null);
+    if(!it){miss.push(f.name);continue}
+    const d=await shrink(f);if(d){setImg(it,d);ok++}else miss.push(f.name)}
+  save();render();say(ok+" posters added"+(miss.length?", "+miss.length+" not matched: "+miss.slice(0,3).join(", ")+(miss.length>3?"…":""):"."))};
+$("zipBtn").onclick=()=>$("zipPick").click();
+$("zipPick").onchange=async e=>{const z=e.target.files[0];e.target.value="";if(!z)return;
+  try{say("Reading zip…");
+    if(!window.JSZip)await new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js";s.onload=ok;s.onerror=no;document.head.appendChild(s)});
+    const zip=await JSZip.loadAsync(z);const fs=[];
+    for(const k of Object.keys(zip.files)){const en=zip.files[k];if(en.dir||/__MACOSX/.test(k)||!/\.(jpe?g|png|webp|gif)$/i.test(k))continue;
+      const b=await en.async("blob");fs.push(new File([b],k.split("/").pop(),{type:"image/"+k.split(".").pop().toLowerCase().replace("jpg","jpeg")}))}
+    if(!fs.length){say("No images found in that zip.");return}
+    await addPosters(fs)}catch(err){say("Couldn't read the zip. It needs internet the first time.")}};
+$("detBtn").onclick=()=>$("detPick").click();
+$("detPick").onchange=e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);let ok=0;
+    Object.keys(d).forEach(name=>{const n=nrm(name);if(!n)return;
+      const it=items.find(x=>nrm(x.title)===n)||(n.length>3?items.find(x=>{const t=nrm(x.title);return t.includes(n)||n.includes(t)}):null);
+      if(!it)return;const v=d[name]||{};DETS[it.id]={o:String(v.o||""),g:Array.isArray(v.g)?v.g.map(String):[],y:String(v.y||""),r:+v.r||0,s:String(v.s||""),d:String(v.d||""),n:+v.n||0,x:String(v.x||"")};ok++});
+    saveDets();render();say(ok+" descriptions added.")}catch(_){say("That file isn't a valid details file.")}};r.readAsText(f)};
+function tickClock(){const n=new Date();const o={weekday:"short",day:"numeric",month:"short",hour:"2-digit",minute:"2-digit",second:"2-digit"};
+  let ist="",jp="";try{ist=n.toLocaleString("en-GB",{...o,timeZone:"Asia/Kolkata"});jp=n.toLocaleString("en-GB",{...o,timeZone:"Asia/Tokyo"})}catch(e){}
+  $("clock").innerHTML="India time (IST): <b>"+ist+"</b> &nbsp;&middot;&nbsp; Japan time: <b>"+jp+"</b>"}
+
+function patchRcg(){let f="";try{f=localStorage.getItem("anime-rcg-v1")}catch(e){}
+  if(f)return;
+  const it=items.find(x=>x.title.toLowerCase().includes("rich girl caretaker"));
+  if(it){it.status="watching";it.upd=Date.now()}
+  else{items.push({id:"rcg"+Date.now().toString(36),title:"Rich Girl Caretaker",status:"watching",ep:0,tot:0,rating:0,note:"Romance",upd:Date.now(),img:""})}
+  save();try{localStorage.setItem("anime-rcg-v1","1")}catch(e){}}
+function logEp(i){i.log=(Array.isArray(i.log)?i.log:[]).concat({t:Date.now(),e:i.ep}).slice(-200)}
+function patchRcg2(){let f="";try{f=localStorage.getItem("anime-rcg-v2")}catch(e){}
+  if(f)return;
+  const it=items.find(x=>x.title.toLowerCase().includes("rich girl caretaker"));
+  if(it){it.status="watching";it.ep=8;it.upd=Date.now()}
+  save();try{localStorage.setItem("anime-rcg-v2","1")}catch(e){}}
+function renderHist(){const ul=$("histList");if(!ul)return;
+  const eps=[];items.forEach(i=>(i.log||[]).forEach(x=>{const num=typeof x==="number";eps.push({title:i.title,t:num?x:(x.t||0),e:num?null:x.e})}));
+  eps.sort((a,b)=>b.t-a.t);
+  const fmt=t=>new Date(t).toLocaleString(undefined,{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
+  const done=items.filter(i=>i.status==="completed").map(i=>{const m=(i.note||"").match(/Completed ([^\u00b7]+)/);return{title:i.title,when:m?m[1].trim():"date not recorded"}});
+  const epHtml=eps.length?eps.slice(0,200).map(x=>`<li><div><div class="t">${esc(x.title)}</div><div class="meta">${x.e?"Ep "+x.e+" started":"Episode update"} \u00b7 ${fmt(x.t)}</div></div></li>`).join("")
+    :`<li><div class="meta">No episode updates yet. Tap +1 ep or double-tap a card to start logging.</div></li>`;
+  const doneHtml=done.map(x=>`<li><div><div class="t">${esc(x.title)}</div><div class="meta">Completed ${esc(x.when)}</div></div></li>`).join("");
+  ul.innerHTML=`<li><div class="t">Episode updates (newest first)</div></li>`+epHtml+`<li><div class="t">Completed shows</div></li>`+doneHtml}
+function paintWall(){const w=$("wall");if(!w)return;
+  const imgs=items.map(i=>getImg(i)).filter(x=>x&&x.indexOf("data:image/")===0).slice(0,36);
+  const key=imgs.length+":"+(imgs[0]||"").length;if(w.dataset.k===key)return;w.dataset.k=key;
+  w.innerHTML=imgs.map(s=>`<img src="${s}" alt="">`).join("")}
+
+$("archClose").onclick=()=>$("archDlg").close();
+$("logBtn").onclick=async()=>{
+  if(!window.showDirectoryPicker){say("PC log needs Chrome or Edge on your computer.");return}
+  try{const dir=await window.showDirectoryPicker({mode:"readwrite"});
+    LOGH=await dir.getFileHandle("anime-log.txt",{create:true});
+    const f=await LOGH.getFile();
+    if(f.size===0){const w=await LOGH.createWritable();await w.write("Date | Anime | Change\n");await w.close()}
+    say("PC log saved in folder: "+dir.name)}
+  catch(e){if(e&&e.name!=="AbortError")say("Could not connect the PC log.")}};
+function renderRec(){
+  const have=new Set(items.map(i=>i.title.toLowerCase()));
+  $("recList").innerHTML=REC.map((r,k)=>{const on=have.has(r[0].toLowerCase());
+   return `<li><div><div class="t">${esc(r[0])}</div><div class="meta">${r[1]}</div></div><button data-r="${k}"${on?" disabled":""}>${on?"On your list":"Add"}</button></li>`}).join("")}
+$("recList").onclick=e=>{const b=e.target.closest("button");if(!b||b.disabled)return;const r=REC[+b.dataset.r];
+  items.push({id:"a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),title:r[0],status:"planned",ep:0,tot:0,rating:0,note:"",upd:Date.now()});save();render()};
+function render(){renderRec();renderSeasons();renderHist();paintWall();
+  const n=items.length,done=items.filter(i=>i.status==="completed").length,eps=items.reduce((a,i)=>a+(+i.ep||0),0);
+  const rated=items.filter(i=>i.rating);const avg=rated.length?(rated.reduce((a,i)=>a+i.rating,0)/rated.length).toFixed(1):"–";
+  $("stats").innerHTML=[[n,"Titles"],[done,"Completed"],[eps,"Episodes watched"],[avg,"Average rating"]].map(s=>`<div class="stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join("");
+  const counts={all:n};ST.forEach(s=>counts[s[0]]=items.filter(i=>i.status===s[0]).length);
+  $("tabs").innerHTML=[["all","All"],...ST].map(s=>`<button class="tab" data-f="${s[0]}" aria-pressed="${filter===s[0]}">${s[1]} (${counts[s[0]]})</button>`).join("");
+  const q=$("q").value.trim().toLowerCase(),sort=$("sort").value;
+  let v=items.filter(i=>(filter==="all"||i.status===filter)&&i.title.toLowerCase().includes(q)&&(!$("gen").value||genreOf(i)===$("gen").value)&&(!$("air").value||airKey(i)===$("air").value)&&(!$("sea").value||seasonOf(i)===$("sea").value));
+  v.sort((a,b)=>sort==="done"?(cd(b.note)-cd(a.note))||(b.upd-a.upd):sort==="title"?a.title.localeCompare(b.title):sort==="seasons"?((DETS[b.id]||{}).n||0)-((DETS[a.id]||{}).n||0):sort==="rating"?(b.rating||0)-(a.rating||0):b.upd-a.upd);
+  if(!v.length){$("list").innerHTML=`<li class="empty">${n?"No titles match. Try another filter or search.":"Your list is empty. Select Add anime to track your first show."}</li>`;return}
+  $("list").innerHTML=v.map(i=>{const s=label(i.status),pct=i.status==="completed"?100:i.tot?Math.min(100,Math.round(i.ep/i.tot*100)):0;
+   return `<li class="item" style="--s:var(${s[2]})">${pic(i)}<div><div class="t" data-id="${i.id}">${esc(i.title)}</div>
+   <div class="meta"><span class="badge">${s[1]}</span> &nbsp;${i.status==="completed"?"All episodes watched"+(i.tot?" ("+i.tot+" eps)":""):"Ep "+i.ep+(i.tot?" of "+i.tot:"")}${i.rating?" &nbsp;Rated "+i.rating+"/10":""}${i.rw?" &nbsp;Rewatch ×"+i.rw:""}</div>${chipsHtml(i)}</div>
+   <div class="act">${i.status==="completed"?`<button data-a="rewatch" data-id="${i.id}" aria-label="Rewatch ${esc(i.title)}">Rewatch</button>`:""}${i.status==="planned"?`<button data-a="start" data-id="${i.id}" aria-label="Start watching ${esc(i.title)}">Start</button>`:""}${i.status!=="completed"?`<button class="plus" data-a="inc" data-id="${i.id}" aria-label="Add one episode to ${esc(i.title)}">+1 ep</button>`:""}<button data-a="edit" data-id="${i.id}" aria-label="Edit ${esc(i.title)}">Edit</button></div>
+   ${(i.tot||i.status==="completed")?`<div class="prog" aria-hidden="true"><i style="width:${pct}%"></i></div>`:""}
+   ${i.note?`<p class="note">${esc(i.note)}</p>`:""}</li>`}).join("")}
+function openDlg(id){editId=id;const i=items.find(x=>x.id===id)||{title:"",status:"watching",ep:0,tot:"",rating:"",note:""};
+  $("dt").textContent=id?"Edit anime":"Add anime";$("del").hidden=!id;
+  $("fStatus").innerHTML=ST.map(s=>`<option value="${s[0]}"${i.status===s[0]?" selected":""}>${s[1]}</option>`).join("");
+  $("fTitle").value=i.title;$("fEp").value=i.ep;$("fTot").value=i.tot||"";$("fRate").value=i.rating||"";$("fNote").value=i.note||"";
+  curImg=getImg(i);imgUI();$("dlg").showModal();$("fTitle").focus()}
+$("add").onclick=()=>openDlg(null);
+$("cancel").onclick=()=>$("dlg").close();
+$("f").onsubmit=e=>{
+  const title=$("fTitle").value.trim();if(!title)return;
+  const tot=parseInt($("fTot").value)||0;let ep=Math.max(0,parseInt($("fEp").value)||0);if(tot&&ep>tot)ep=tot;
+  let status=$("fStatus").value;if(tot&&ep>=tot)status="completed";
+  const r=parseFloat($("fRate").value);const rating=r>=1&&r<=10?r:0;
+  const d={title,status,ep,tot,rating,note:$("fNote").value.trim(),upd:Date.now()};
+  let it;if(editId){it=items.find(x=>x.id===editId);Object.assign(it,d)}else{it={id:"a"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),...d};items.push(it)}setImg(it,curImg);
+  save();render()};
+let delArm=false;
+function delReset(){delArm=false;$("del").textContent="Delete"}
+$("dlg").addEventListener("close",delReset);
+$("del").onclick=()=>{if(!delArm){delArm=true;$("del").textContent="Tap again to delete";setTimeout(delReset,4000);return}
+  delReset();items=items.filter(x=>x.id!==editId);save();render();$("dlg").close()};
+$("list").onclick=e=>{const b=e.target.closest("button");if(!b)return;const id=b.dataset.id;
+  if(b.dataset.a==="edit")openDlg(id);
+  if(b.dataset.a==="rewatch"){const i=items.find(x=>x.id===id);if(i)startRewatch(i)}
+  if(b.dataset.a==="start"){const i=items.find(x=>x.id===id);if(i){i.status="watching";i.upd=Date.now();save();render();say("Started watching: "+i.title)}}
+  if(b.dataset.a==="inc"){const i=items.find(x=>x.id===id);i.ep++;logEp(i);if(i.status!=="watching")i.status="watching";if(i.tot&&i.ep>=i.tot)i.status="completed";i.upd=Date.now();save();render()}};
+$("list").addEventListener("dblclick",e=>{if(e.target.closest("button"))return;const li=e.target.closest("li.item");if(!li)return;const idEl=li.querySelector("[data-id]");if(!idEl)return;
+  const i=items.find(x=>x.id===idEl.dataset.id);if(!i)return;if(i.status==="completed"){startRewatch(i);return}
+  i.ep=(+i.ep||0)+1;logEp(i);if(i.tot&&i.ep>=i.tot){i.ep=i.tot;i.status="completed"}else i.status="watching";
+  i.upd=Date.now();save();render();say(i.title+": episode "+i.ep)});
+function startRewatch(i){i.rw=(+i.rw||0)+1;i.status="watching";i.ep=0;i.upd=Date.now();save();render();say("Rewatch "+i.rw+": "+i.title)}
+$("tabs").onclick=e=>{const b=e.target.closest("button");if(b){filter=b.dataset.f;const s=$("sort");if(filter==="completed")s.value="done";else if(s.value==="done")s.value="upd";render()}};
+$("q").oninput=render;$("sort").onchange=render;$("gen").onchange=render;$("air").onchange=render;$("sea").onchange=render;
+function say(t){$("msg").textContent=t;setTimeout(()=>$("msg").textContent="",4000)}
+$("exp").onclick=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(items.map(i=>({...i,img:getImg(i)})),null,2)],{type:"application/json"}));a.download="anime-tracker-backup.json";a.click();say("Backup downloaded.")};
+$("imp").onclick=()=>$("file").click();
+$("file").onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d))throw 0;
+    const ids=new Set(items.map(i=>i.id));let add=0;
+    d.forEach(i=>{if(i&&i.title&&!ids.has(i.id)){items.push({id:i.id||"a"+Math.random().toString(36).slice(2),title:String(i.title),status:label(i.status)?i.status:"planned",ep:+i.ep||0,tot:+i.tot||0,rating:+i.rating||0,note:String(i.note||""),img:(typeof i.img==="string"&&i.img.indexOf("data:image/")===0)?i.img:"",upd:+i.upd||Date.now()});add++}});
+    migrateImgs();save();render();say(add+" titles imported.")}catch(_){say("That file isn't a valid backup.")}};
+  r.readAsText(f);e.target.value=""};
+function importPrev(){let f="";try{f=localStorage.getItem("anime-prev-imported")}catch(e){}
+  if(f)return;const have=new Set(items.map(i=>i.title.toLowerCase()));let t=Date.now();
+  PREV.forEach((r,n)=>{if(!have.has(r[0].toLowerCase()))items.push({id:"p"+n+t.toString(36),title:r[0],status:r[1],ep:r[2],tot:r[3],rating:r[4],note:r[5],upd:t-n})});
+  save();try{localStorage.setItem("anime-prev-imported","1")}catch(e){}}
+function patchDates(){let f="";try{f=localStorage.getItem("anime-dates-v1")}catch(e){}
+  if(f)return;
+  const P=[["my happy marriage","Completed Sep 18, 2026 (S1)"],["love unseen beneath","Completed ~Oct 31, 2026"],["overshadowed to overpowered","Completed Nov 5, 2026"],["finest assassin","Completed Nov 12, 2026"],["mushoku tensei: jobless","S1 + OVA: Nov 12–15, 2026 · S2: Nov 15–17, 2026"]];
+  P.forEach(p=>{const i=items.find(x=>x.title.toLowerCase().includes(p[0]));if(!i)return;
+    i.status="completed";if(i.tot)i.ep=i.tot;if(!i.note.includes(p[1]))i.note=i.note?i.note+" · "+p[1]:p[1];i.upd=Date.now()});
+  save();try{localStorage.setItem("anime-dates-v1","1")}catch(e){}}
+function patchTimes(){let f="";try{f=localStorage.getItem("anime-dates-v2")}catch(e){}
+  if(f)return;
+  const P=[["condition called love","Final completion Nov 5, 12:17 AM"],["mushoku tensei: jobless","S1 finished Nov 15, 11:20 PM · S2 finished Nov 17, 11:24 AM"]];
+  P.forEach(p=>{const i=items.find(x=>x.title.toLowerCase().includes(p[0]));if(!i)return;
+    if(!i.note.includes(p[1]))i.note=i.note?i.note+" · "+p[1]:p[1];i.upd=Date.now()});
+  save();try{localStorage.setItem("anime-dates-v2","1")}catch(e){}}
+function patchEps(){let f="";try{f=localStorage.getItem("anime-eps-v3")}catch(e){}
+  if(f)return;
+  const E=[["black clover",170],["hunter",148],["death note",37],["darling in the franxx",24],["your lie in april",22],["your name",1],["suzume",1],["a silent voice",1],["first kiss that never ends",1],["bunny girl senpai",13],["detective is already dead",12],["86: eighty-six",23],["a couple of cuckoos",24],["vermeil in gold",12]];
+  E.forEach(p=>{const i=items.find(x=>x.status==="completed"&&x.title.toLowerCase().includes(p[0]));if(i){i.tot=p[1];i.ep=p[1]}});
+  save();try{localStorage.setItem("anime-eps-v3","1")}catch(e){}}
+function patchNotes(){let f="";try{f=localStorage.getItem("anime-notes-v4")}catch(e){}
+  if(f)return;
+  const N=[["fragrant flower","Favorite ❤️ · 13/13",13],["yowayowa","S1 12/12",12],["days with my stepsister","S1 12/12",12],["kaguya-sama: love is war","Favorite ❤️ · S1–S3 + First Kiss",0],["a couple of cuckoos","S1 24/24 + S2 · S1 liked more; S2 less because the Hindi dub changed",0],["oshi no ko","S1–S3",0],["konosuba","All released main seasons + spin-off/movie",0],["tonikawa","Incomplete",0]];
+  N.forEach(p=>{const i=items.find(x=>x.title.toLowerCase().includes(p[0]));if(!i)return;
+    if(p[2]&&i.status==="completed"){i.tot=p[2];i.ep=p[2]}
+    if(!i.note.includes(p[1]))i.note=i.note?i.note+" · "+p[1]:p[1]});
+  save();try{localStorage.setItem("anime-notes-v4","1")}catch(e){}}
+(async()=>{load();importPrev();patchDates();patchTimes();patchEps();patchNotes();patchRcg();patchRcg2();await idbLoad();migrateImgs();save();render()})();
+</script>
+</body>
+</html>
